@@ -1,0 +1,114 @@
+* { 
+  -moz-box-sizing: border-box; 
+  -webkit-box-sizing: border-box; 
+   box-sizing: border-box; 
+  font-family: Helvetica;
+}
+
+.wrapper {
+  width: 600px;
+  height: 100px;
+  padding: 0px;
+  margin: auto;
+  border: 1px solid black;
+  overflow: clip;
+  margin-bottom: 2em;
+}
+
+.wrapper-child {
+  width: 100px;
+  height: 100px;
+  margin: 0px;
+}
+
+.starting-light {
+  background-color: red;
+  float: left;
+}
+
+.green-flag {
+  background-color: green;
+  float: right;
+}
+
+.controller-indicator {
+  float: left;
+  transition-timing-function: linear;
+  transition: width 0.1s;
+  background-color: red;
+  height: 100px;
+  width: 0%;
+}
+
+.car-info-wrapper {
+  width: 80%;
+
+  margin: auto;
+  margin-bottom: 2em;
+  overflow: hidden;
+}
+
+.car-info-card {
+  width: 14%;
+  height: 20em;
+  float: left;
+
+  border: 1px solid black;
+  margin-right: 1em;
+  margin-bottom: 1em;
+}
+
+.car-info-card-header {
+  width: 100%;
+  height: 3em;
+  padding: 5px;
+  margin: auto;
+}
+
+.car-info-card-content {
+  width: 100%;
+  padding: 5px;
+  
+  margin: auto;
+}
+
+.fastest_lap {
+  display: inline;
+  float: right;
+  width: 2em;
+}
+
+.data {
+  width: 100%;
+  margin: 0px;
+  padding: 0px;
+  /*background-color: blueviolet;*/
+  overflow: hidden;
+  margin-bottom: 0.5em;
+}
+
+.data-title {
+  float: left;
+  margin: 0px;
+  padding: 0px;
+}
+
+.data-content {
+  float: right;
+  margin: 0px;
+  padding: 0px;
+}
+
+.fuel {
+  float: right;
+  width: 60%;
+  border: 1px solid black;
+  border-radius: 3px;
+}
+
+.fuel-data {
+  width: 70%;
+  height: 1em;
+  transition: width 1s;
+  background-color: green;
+}
