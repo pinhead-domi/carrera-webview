@@ -1,34 +1,26 @@
 use async_stream::stream;
 use axum::{
   extract::State,
-  http::StatusCode,
   response::sse::{Event, KeepAlive, Sse},
-  routing::{get, post},
-  Json, Router,
+  routing::get,
+  Router,
 };
 
 use futures_util::stream::Stream;
-use serde::{Deserialize, Serialize};
-//use serialport::{available_ports, SerialPort};
-use tokio_serial::{available_ports, SerialPortBuilderExt, SerialStream};
-//use tokio_serial::SerialPort;
+use serde::Serialize;
+use std::sync::Arc;
 use std::{borrow::BorrowMut, path::PathBuf, time::SystemTime};
 use std::{convert::Infallible, time::Duration};
-use std::{
-  sync::{Arc, Mutex},
-  u8,
-};
 use tokio::io::AsyncBufReadExt;
 use tokio::io::BufReader;
 use tokio::sync::broadcast::{self, Receiver, Sender};
 use tokio::time::sleep;
 use tokio_serial::SerialPortType::UsbPort;
+use tokio_serial::{available_ports, SerialPortBuilderExt, SerialStream};
 use tower_http::services::ServeDir;
 
 struct ApplicationState {
-  users: Mutex<Vec<User>>,
   send: Sender<CarreraEvent>,
-  messages: Mutex<Vec<String>>,
 }
 
 #[derive(Serialize, Copy, Clone, Debug)]
@@ -155,8 +147,6 @@ fn arduino_loop(send: Sender<CarreraEvent>) {
     let mut reader = BufReader::new(arduino);
     let mut buffer = String::new();
 
-    let test: u8 = 8;
-
     let mut car_states = [CarState::default(); 8];
 
     loop {
@@ -195,8 +185,6 @@ fn arduino_loop(send: Sender<CarreraEvent>) {
         }
       }
 
-      /*println!("Arduino says '{}'", &buffer);
-      send.send(buffer.clone()).unwrap();*/
       buffer.clear();
     }
   });
@@ -204,7 +192,6 @@ fn arduino_loop(send: Sender<CarreraEvent>) {
 
 #[tokio::main]
 async fn main() {
-  // initialize tracing
   tracing_subscriber::fmt::init();
   let assets_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("assets");
   let static_files_service = ServeDir::new(assets_dir).append_index_html_on_directories(true);
@@ -212,40 +199,15 @@ async fn main() {
   let (send, _recv) = broadcast::channel::<CarreraEvent>(16);
   arduino_loop(send.clone());
 
-  let users: Mutex<Vec<User>> = Mutex::new(Vec::new());
-  let messages: Mutex<Vec<String>> = Mutex::new(Vec::new());
-  let app_state = Arc::new(ApplicationState {
-    users,
-    send,
-    messages,
-  });
+  let app_state = Arc::new(ApplicationState { send });
 
-  // build our application with a route
   let app = Router::new()
     .fallback_service(static_files_service)
-    .route("/users", post(create_user))
-    .with_state(app_state.clone())
-    .route("/users", get(get_users))
-    .with_state(app_state.clone())
     .route("/sse", get(sse_hander))
-    .with_state(app_state.clone())
-    .route("/messages", get(get_messages))
-    .with_state(app_state);
+    .with_state(app_state.clone());
 
-  // run our app with hyper, listening globally on port 3000
   let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
   axum::serve(listener, app).await.unwrap();
-}
-
-async fn get_users(State(state): State<Arc<ApplicationState>>) -> (StatusCode, Json<Vec<User>>) {
-  let users = state.users.lock().unwrap().clone();
-  (StatusCode::OK, Json(users))
-}
-
-async fn get_messages(
-  State(state): State<Arc<ApplicationState>>,
-) -> (StatusCode, Json<Vec<String>>) {
-  (StatusCode::OK, Json(state.messages.lock().unwrap().clone()))
 }
 
 async fn sse_hander(
@@ -273,7 +235,6 @@ fn recv_to_stream(
               }
             };
 
-            //yield Ok(Event::default().event("Arduino").json_data(msg));
             match Event::default().event(name.as_str()).json_data(msg) {
               Ok(event) => {
                 yield Ok(event);
@@ -289,32 +250,4 @@ fn recv_to_stream(
       }
     }
   }
-}
-
-async fn create_user(
-  State(state): State<Arc<ApplicationState>>,
-  Json(payload): Json<CreateUser>,
-) -> (StatusCode, Json<User>) {
-  let mut users = state.users.lock().unwrap();
-
-  let user = User {
-    id: users.len() as u64,
-    username: payload.username.clone(),
-  };
-
-  users.push(user.clone());
-  (StatusCode::CREATED, Json(user))
-}
-
-// the input to our `create_user` handler
-#[derive(Deserialize)]
-struct CreateUser {
-  username: String,
-}
-
-// the output to our `create_user` handler
-#[derive(Serialize, Clone)]
-struct User {
-  id: u64,
-  username: String,
 }
