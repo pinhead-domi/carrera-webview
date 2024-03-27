@@ -17,13 +17,15 @@ with the following messages planned:
 
 ## Roadmap
 The most important part for me was to get SSE in combination with serial communication to work, which gives a solid foundation to build uppon. From here there are a few priorities that I think need to be adressed in a similar order as follows:
- 1. Refactor the codebase [seperate files, variable names, error handling/removing unwraps]
- 2. Iron out bugs/oversights
+ 1. [ ] Refactor the codebase [seperate files, variable names, error handling/removing unwraps]
+ 2. [ ] Iron out bugs/oversights
   - First lap always has a time of 0s
   - Car states are not implemented as an axum state
   - Handle reset events from the CU better
- 3. Add api endpoints without SSE [requires axum state from previous points] to keep [new] clients in sync
- 4. Major UI 'improvements': The current UI is just a POC, the idea is to implement the following:
+ 3. [ ] Debugging messages
+ 4. [ ] Database persistence: Create races to group data together
+ 5. [ ] Add api endpoints without SSE [requires axum state from previous points] to keep [new] clients in sync
+ 6. [ ] Major UI 'improvements': The current UI is just a POC, the idea is to implement the following:
   - Starting lights as a popup/overlay
   - Track-Status indicator [Green flag/Safety car]
   - Driver position tower
